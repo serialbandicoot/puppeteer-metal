@@ -13,10 +13,12 @@ https://app.roboflow.com/workflows/embed/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ey
 
 Get a Roboflow API Key and replace the following in app.py
 
-```client = InferenceHTTPClient(
+```
+client = InferenceHTTPClient(
     api_url="http://localhost:9001", # use local inference server
     api_key="QWERTYUIOPASDFGHJKLZXCVBNM123456" # use the API key from the inference server
-)```
+)
+```
 
 `python roboflow-server/app.py` to start the Workflow Server
 
