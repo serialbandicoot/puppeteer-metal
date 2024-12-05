@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 client = InferenceHTTPClient(
     api_url="http://localhost:9001", # use local inference server
-    api_key="QWERTYUIOPASDFGHJKLZXCVBNM123456" # use the API key from the inference server
+    api_key="5lOT9R7Yj7uFZVHomdQm"
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))

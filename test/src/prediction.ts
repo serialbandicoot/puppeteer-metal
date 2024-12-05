@@ -151,38 +151,4 @@ export class Prediction {
         
     }
 
-    // Get the first prediction's x, y coordinates
-    async getFirstXY(predictions: PredictionResult[], targetClass: string): Promise<XYCoords> {
-        if (predictions.length === 0) {
-            throw new Error("No predictions found.");
-        }
-    
-        // Iterate over predictions
-        for (let i = 0; i < predictions.length; i++) {
-            const prediction = predictions[i];
-    
-            // Iterate through all the individual predictions in model_predictions.predictions.predictions
-            for (let j = 0; j < prediction.model_predictions.predictions.predictions.length; j++) {
-                const modelPrediction = prediction.model_predictions.predictions.predictions[j];
-    
-                // Check if the class matches the targetClass
-                if (modelPrediction.class === targetClass) {
-                    // Check if the top in model_1 matches the target class at the same position
-                    if (prediction.model_1[j].predictions.top === targetClass) {
-                        // Return XYCoords if both match
-                        const coords: XYCoords = {
-                            x: modelPrediction.x,
-                            y: modelPrediction.y,
-                        };
-                        return coords;
-                    } else {
-                        throw new Error(`Top values do not match for the target class at index ${j}.`);
-                    }
-                }
-            }
-        }
-    
-        // Throw an error if no match is found
-        throw new Error(`No matching class found for: ${targetClass}`);
-    }
 }
