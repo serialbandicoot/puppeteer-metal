@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "CommonJS",
+    "strict": true,
+    "esModuleInterop": true,
+    "outDir": "./dist",
+    "lib": ["ES2020", "DOM"]
+  },
+  "include": ["src", "test/support", "test/src/screenshot.ts"],
+  "exclude": ["node_modules", "dist"]
+}
