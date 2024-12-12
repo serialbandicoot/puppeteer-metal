@@ -1,7 +1,9 @@
 import { Page } from 'puppeteer';
 import { Screenshot } from '../screenshot';
-import { PredictionResult, TextPredictionResult, XYCoords } from '../types';
+import { PredictionResult, TablePrediction, TablePredictionResult, TextPredictionResult, XYCoords } from '../types';
 import { Prediction } from '../prediction';
+import { console } from 'inspector';
+import {toDataFrame, TableData} from 'html-table-to-dataframe'
 
 export type UIElementButton = {
     click: () => Promise<void>;
@@ -9,6 +11,11 @@ export type UIElementButton = {
     model: "form-segmentation" | "auth-detection";
 }
 
+export type UITableElement = {
+    getTable: () => Promise<TableData>;
+    label: string;
+    model: string;
+}
 
 export type UIElementInput = {
     click: () => Promise<void>;
@@ -117,6 +124,77 @@ export class BasePage {
         await this.removeMarks();
     }
 
+    async handleTable(model: string): Promise<TableData> {
+        const filePath = await this.takeScreenshot();
+        const prediction = new Prediction(filePath);
+        const result: TablePredictionResult = await prediction.getTablePrediction(model);
+        
+        if (!result.predictions || result.predictions.length === 0) {
+            throw new Error("No predictions found.");
+          }
+
+        const topPrediction = result.predictions.reduce((highest, current) =>
+            current.confidence > highest.confidence ? current : highest
+        );;
+
+        const xyCoords = {
+            x: topPrediction.x,
+            y: topPrediction.y
+        } as XYCoords;
+
+        const { insideTable, locator, outerHTML } = await this.page.evaluate((x, y) => {
+            // Get the element at the given coordinates
+            const element = document.elementFromPoint(x, y);
+          
+            // Navigate up the DOM tree to check if it’s inside a table
+            let currentElement = element;
+            while (currentElement) {
+              if (currentElement.tagName === 'TABLE') {
+                // If the table is found, generate a query selector for it
+                const selector = currentElement.id
+                  ? `#${currentElement.id}` // If the table has an id
+                  : currentElement.className
+                  ? `.${currentElement.className.split(' ').join('.')}` // If the table has a class
+                  : 'table'; // If the table doesn't have id or class, fallback to the tag name
+          
+                // Get the outerHTML of the table
+                const outerHTML = currentElement.outerHTML;
+          
+                return { insideTable: true, locator: selector, outerHTML }; // Return all the relevant data
+              }
+              currentElement = currentElement.parentElement;
+            }
+          
+            return { insideTable: false, locator: null, outerHTML: null }; // Return nulls if no table is found
+          }, xyCoords.x, xyCoords.y);
+          
+          if (insideTable) {
+            console.log(`Click at (${xyCoords.x}, ${xyCoords.y}) is inside a table.`);
+            console.log(`Table locator: document.querySelector('${locator}')`);
+            console.log('OuterHTML of the table:', outerHTML);
+          } else {
+            console.log(`Click at (${xyCoords.x}, ${xyCoords.y}) is NOT inside a table.`);
+          }
+
+          if (!outerHTML) {
+            throw new Error('No table found');
+          }
+          await this.mark(xyCoords);
+          const dataFrame = toDataFrame(outerHTML)
+
+        return dataFrame;
+    }
+
+    UITableElement(label: string, model: string): UITableElement {
+        return {
+            label,
+            getTable: async () => {
+                return this.handleTable(model);
+            },
+            model,
+        };
+    }
+
     UIElementButton(label: string, model: "form-segmentation" | "auth-detection"): UIElementButton {
         return {
             label,
@@ -144,4 +222,9 @@ export class BasePage {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
+    scrollDown = async () => {
+        await this.page.evaluate(() => {
+        window.scrollBy(0, window.innerHeight); // Scroll down by one page height
+      });
+    }
 }

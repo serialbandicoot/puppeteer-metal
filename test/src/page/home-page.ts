@@ -1,5 +1,5 @@
 import { Page } from "puppeteer";
-import { BasePage, UIElementButton, UIElementInput } from "./base-page";
+import { BasePage, UIElementButton, UIElementInput, UITableElement } from "./base-page";
 
 export class HomePage extends BasePage {
     
@@ -8,6 +8,7 @@ export class HomePage extends BasePage {
     readonly signIn: UIElementButton;
     readonly username: UIElementInput;
     readonly password: UIElementInput;
+    readonly table: UITableElement;
 
     constructor(page: Page) {
         super(page);
@@ -16,5 +17,7 @@ export class HomePage extends BasePage {
         this.signIn = this.UIElementButton("sign-in", "auth-detection");
         this.username = this.UIElementInput("username", "form-segmentation");
         this.password = this.UIElementInput("password", "form-segmentation");
+        this.table = this.UITableElement("table", "tables-extraction/1");
     }
+   
 }

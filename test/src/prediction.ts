@@ -1,8 +1,42 @@
-import { AuthPrediction, Model1Prediction, ModelPredictions, PredictionResult, TextPredictionResult, XYCoords } from "./types";
+import { AuthPrediction, Model1Prediction, ModelPredictions, PredictionResult, TablePredictionResult, TextPredictionResult, XYCoords } from "./types";
 
 export class Prediction {
     constructor(readonly fileName: string) {}
 
+
+    async getTablePrediction(model_id: string): Promise<TablePredictionResult> {
+
+        const base64FilePath = Buffer.from(this.fileName).toString('base64');
+
+        const url = `http://127.0.0.1:5000/infer_table?image_file_path=${base64FilePath}&model_id=${model_id}`;
+
+        try {
+            const response = await fetch(url);
+    
+            // Handle potential errors
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to fetch predictions for file: ${this.fileName}. Status: ${response.status}, Message: ${response.statusText}`
+                );
+            }
+    
+            const jsonData = await response.json();
+            
+            // Validate the JSON response structure
+            if (!jsonData) {
+                throw new Error("Unexpected response structure from the server");
+            }
+    
+            console.log(jsonData);
+    
+            // Returning the predictions as typed data
+            return jsonData as TablePredictionResult;
+        } catch (error) {
+            console.error("Error during prediction fetch:", error);
+            throw new Error("Failed to fetch predictions. Ensure the server is running and reachable.");
+        }
+
+    }
 
     async getFormPrediction(text: string[]): Promise<TextPredictionResult[]> {
         // Join the array into a single string with double pipes (||) as the delimiter
@@ -48,7 +82,7 @@ export class Prediction {
         const base64FilePath = Buffer.from(this.fileName).toString('base64');
         
         // Construct the URL with the query parameter
-        const url = `http://127.0.0.1:5000/infer?image_file_path=${base64FilePath}&workflow_id=${model}`;
+        const url = `http://127.0.0.1:5000/infer_workflow?image_file_path=${base64FilePath}&workflow_id=${model}`;
     
         try {
             const response = await fetch(url);

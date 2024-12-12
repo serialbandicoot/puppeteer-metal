@@ -11,7 +11,7 @@ app = Flask(__name__)
 
 client = InferenceHTTPClient(
     api_url="http://localhost:9001", # use local inference server
-    api_key="5lOT9R7Yj7uFZVHomdQm"
+    api_key="QWERTYUIOP"
 )
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -66,8 +66,8 @@ def infer_text():
     except Exception as e:
         return jsonify({"error": f"Failed to process input: {str(e)}"}), 500
 
-@app.route('/infer', methods=['GET'])
-def infer():
+@app.route('/infer_workflow', methods=['GET'])
+def infer_workflow():
     base64_image_path = request.args.get('image_file_path')
     workflow_id = request.args.get('workflow_id')  # Get the workflow_id from the query parameters
     
@@ -97,6 +97,39 @@ def infer():
                 images={
                     "image": image_path
                 }
+            )
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return jsonify({"error": "An error occurred during inference", "details": str(e)}), 500
+
+    return jsonify(predictions)
+
+
+@app.route('/infer_table', methods=['GET'])
+def infer_table():
+    base64_image_path = request.args.get('image_file_path')
+    model_id = request.args.get('model_id') 
+    
+    if not base64_image_path:
+        return jsonify({"error": "Missing 'image_file_path' query parameter"}), 400
+    
+    try:
+        decoded_path = base64.b64decode(base64_image_path).decode('utf-8')
+    except Exception:
+        return jsonify({"error": "Invalid base64 encoding for 'image_file_path'"}), 400
+    
+    image_path = os.path.join(decoded_path)    
+    if not image_path:
+        return jsonify({"error": "Image parameter is required"}), 400
+    
+    if not os.path.isfile(image_path):
+        return jsonify({"error": "Image not found"}), 404
+
+    custom_configuration = InferenceConfiguration(confidence_threshold=0.9)
+    with client.use_configuration(custom_configuration):
+        try:
+            predictions = client.infer(image_path,
+                model_id=model_id
             )
         except Exception as e:
             print(f"An error occurred: {e}")

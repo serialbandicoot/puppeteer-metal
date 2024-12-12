@@ -24,6 +24,7 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
+    "html-table-to-dataframe": "^1.0.37",
     "puppeteer": "^23.9.0",
     "start-server-and-test": "^2.0.8",
     "uuid": "^10.0.0"

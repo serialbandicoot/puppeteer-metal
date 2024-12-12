@@ -19,4 +19,19 @@ describe('ML Flerovium Test', () => {
 
     }, 100000);
 
+
+    test('should extract table', async () => {
+        pageManager = new PageManager();
+        await pageManager.initialize();
+        await pageManager.navigateTo("https://www.ibm.com/docs/en/i/7.3?topic=tables-sales-table-sales");
+        homePage = new HomePage(pageManager.getPage());
+        await homePage.accept.click();
+        await homePage.scrollDown();
+
+        const table = await homePage.table.getTable();
+        console.log(table);
+        await pageManager.close();
+
+    }, 100000);
+
 });

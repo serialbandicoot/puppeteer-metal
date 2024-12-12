@@ -85,3 +85,16 @@ export interface Image {
     label: string;
     probability: number;
 }
+
+export interface TablePrediction {
+  class: string;
+  confidence: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface TablePredictionResult {
+  predictions: TablePrediction[];
+}
