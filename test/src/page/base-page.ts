@@ -5,6 +5,8 @@ import { Prediction } from '../prediction';
 import { console } from 'inspector';
 import {toDataFrame, TableData} from 'html-table-to-dataframe'
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export type UIElementButton = {
     click: () => Promise<void>;
     label: string;
@@ -12,7 +14,8 @@ export type UIElementButton = {
 }
 
 export type UITableElement = {
-    getTable: () => Promise<TableData>;
+    getTableFromXY: () => Promise<TableData>;
+    getTableFromTATR: () => Promise<string>;
     label: string;
     model: string;
 }
@@ -68,6 +71,7 @@ export class BasePage {
     }
 
     async click(xyCoords: XYCoords | undefined) {
+        await sleep(1000); 
         if (!xyCoords) {
             throw new Error('Invalid coordinates');
         }
@@ -124,6 +128,15 @@ export class BasePage {
         await this.removeMarks();
     }
 
+    async handleTable2() {
+        const filePath = await this.takeScreenshot();
+        const prediction = new Prediction(filePath);
+
+        const result = prediction.getTablePrediction2();
+       
+        return result;
+    }
+
     async handleTable(model: string): Promise<TableData> {
         const filePath = await this.takeScreenshot();
         const prediction = new Prediction(filePath);
@@ -141,6 +154,8 @@ export class BasePage {
             x: topPrediction.x,
             y: topPrediction.y
         } as XYCoords;
+
+        await this.mark(xyCoords);
 
         const { insideTable, locator, outerHTML } = await this.page.evaluate((x, y) => {
             // Get the element at the given coordinates
@@ -188,8 +203,11 @@ export class BasePage {
     UITableElement(label: string, model: string): UITableElement {
         return {
             label,
-            getTable: async () => {
+            getTableFromXY: async () => {
                 return this.handleTable(model);
+            },
+            getTableFromTATR: async () => {
+                return this.handleTable2();
             },
             model,
         };

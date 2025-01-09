@@ -38,6 +38,38 @@ export class Prediction {
 
     }
 
+    async getTablePrediction2(): Promise<string> {
+
+        const base64FilePath = Buffer.from(this.fileName).toString('base64');
+
+        const url = `http://127.0.0.1:5000/infer_tatr?image_file_path=${base64FilePath}`;
+
+        try {
+            const response = await fetch(url);
+    
+            // Handle potential errors
+            if (!response.ok) {
+                throw new Error(
+                    `Failed to fetch predictions for file: ${this.fileName}. Status: ${response.status}, Message: ${response.statusText}`
+                );
+            }
+    
+            const jsonData = await response.json();
+            
+            // Validate the JSON response structure
+            if (!jsonData) {
+                throw new Error("Unexpected response structure from the server");
+            }
+    
+            // Returning the predictions as typed data
+            return jsonData as string;
+        } catch (error) {
+            console.error("Error during prediction fetch:", error);
+            throw new Error("Failed to fetch predictions. Ensure the server is running and reachable.");
+        }
+
+    }
+
     async getFormPrediction(text: string[]): Promise<TextPredictionResult[]> {
         // Join the array into a single string with double pipes (||) as the delimiter
         const joinedText = text.join("||");

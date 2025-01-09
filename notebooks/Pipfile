@@ -8,6 +8,8 @@ roboflow = "*"
 scikit-learn = "*"
 pandas = "*"
 nltk = "*"
+easyocr = "*"
+transformers = "*"
 
 [dev-packages]
 ipykernel = "*"

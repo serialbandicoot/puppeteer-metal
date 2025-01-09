@@ -4,7 +4,13 @@ import base64
 from flask import Flask, jsonify
 from inference_sdk import InferenceHTTPClient, InferenceConfiguration
 import joblib
+import pandas as pd
+from tatr import TableAnalyzer
+from io import BytesIO
+from PIL import Image
+import traceback
 
+table_analyzer = TableAnalyzer() 
 custom_configuration = InferenceConfiguration(confidence_threshold=0.1)
 
 app = Flask(__name__)
@@ -136,6 +142,33 @@ def infer_table():
             return jsonify({"error": "An error occurred during inference", "details": str(e)}), 500
 
     return jsonify(predictions)
+
+@app.route('/infer_tatr', methods=['GET'])
+def infer_tatr():
+    try:
+        # Get the base64-encoded image from the request
+        base64_image = request.args.get('image_file_path')
+        if not base64_image:
+            return jsonify({"error": "Missing 'image_file_path' parameter in the request."}), 400
+
+        # Decode the base64 string and convert it to a PIL image
+        image_path = base64.b64decode(base64_image).decode('utf-8')
+
+        # Perform table detection and return the pandas DataFrame as JSON
+        df = table_analyzer(image_path)  # Call the TableAnalyzer instance with the image
+        df.to_json(orient="records")
+
+        df.columns = df.iloc[0]  # First row becomes the column names
+        df = df.drop(0).reset_index(drop=True)
+        dataframe = df.to_json(orient="records")
+
+        return jsonify({"success": True, "data": dataframe}), 200
+
+    except Exception as e:
+        # Handle any errors gracefully and return the stack trace
+        traceback_str = traceback.format_exc()
+        return jsonify({"success": False, "error": str(e), "trace": traceback_str}), 500
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)
